@@ -6,9 +6,9 @@ services:
   mariadb:
     image: mariadb:user
     container_name: mariadb
-    build: ./mariadb
+    build: ./src/mariadb
     volumes:
-      -mariadb:/var/lib/mysql
+      - mariadb:/var/lib/mysql
     env_file:
       - .env
     networks:
@@ -18,7 +18,7 @@ services:
   nginx:
     image: nginx:user
     container_name: nginx
-    build: ./nginx
+    build: ./src/nginx
     ports:
       - "443:443"
     depends_on:
@@ -32,7 +32,7 @@ services:
   wordpress:
     image: wordpress:user
     container_name: wordpress
-    build: ./wordpress
+    build: ./src/wordpress
     depends_on:
       - mariadb
     volumes:
