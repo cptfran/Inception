@@ -1,36 +1,35 @@
-WORDPRESS_DATA = /home/data/wordpress
-MARIADB_DATA = /home/data/mariadb
-
-all: up
-
-up: build
-	@mkidr -p $(WORDPRESS_DATA)
-	@mkdir -p $(MARIADB_DATA)
-	docker-compose -f ./docker-compose.yml up -d
-
-down:
-	docker-compose -f ./docker-compose.yml down
-
-stop:
-	docker-compose -f ./docker-compose.yml stop
-
-start:
-	docker-compose -f ./docker-compose.yml start
+name = inception
+all:
+	@printf "Launch configuration ${name}...\n"
+	@bash srcs/requirements/wordpress/tools/make_dir.sh
+	@docker-compose -f ./srcs/docker-compose.yml --env-file srcs/.env up -d
 
 build:
-	docker-compose -f ./docker-compose.yml build
+	@printf "Building configuration ${name}...\n"
+	@bash srcs/requirements/wordpress/tools/make_dir.sh
+	@docker-compose -f ./srcs/docker-compose.yml --env-file srcs/.env up -d --build
 
-clean:
-	@docker stop $$(docker ps -qa) || true
-	@docker rm $$(docker ps -qa) || true
-	@docker rmi -f $$(docker images -qa) || true
-	@docker volume rm $$(docker volume ls -q) || true
-	@docker network rm $$(docker network ls -q) || true
-	@rm -rf $(WORDPRESS_DATA) || true
-	@rm -rf $(MARIADB_DATA) || true
+down:
+	@printf "Stopping configuration ${name}...\n"
+	@docker-compose -f ./srcs/docker-compose.yml --env-file srcs/.env down
 
-re: clean up
+re: down
+	@printf "Rebuild configuration ${name}...\n"
+	@docker-compose -f ./srcs/docker-compose.yml --env-file srcs/.env up -d --build
 
-prune: clean
-	@docker system prune -a --volumes -f
+clean: down
+	@printf "Cleaning configuration ${name}...\n"
+	@docker system prune -a
+	@sudo rm -rf ~/data/wordpress/*
+	@sudo rm -rf ~/data/mariadb/*
 
+fclean:
+	@printf "Total clean of all configurations docker\n"
+	@docker stop $$(docker ps -qa)
+	@docker system prune --all --force --volumes
+	@docker network prune --force
+	@docker volume prune --force
+	@sudo rm -rf ~/data/wordpress/*
+	@sudo rm -rf ~/data/mariadb/*
+
+.PHONY	: all build down re clean fclean
